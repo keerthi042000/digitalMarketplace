@@ -1,4 +1,4 @@
-## Overview
+## Solution Overview
 
 I implemented a small secondary-trading experience on top of the provided tZERO-style assignment codebase. It consists of:
 
@@ -6,62 +6,27 @@ I implemented a small secondary-trading experience on top of the provided tZERO-
   - Lists all secondary-trading assets from `secondaryTradingAssets.json`.  
   - Users can:
     - Search by asset name/symbol/description.
-    - Filter by **Category** (multi-select).
-    - Filter by **Performance** (Gainers/Losers, multi-select).
-    - Sort by price (low→high / high→low) or by % change (top gainers).  
-  - A responsive card layout shows key data per asset (price, daily performance, 52-week range, tags like “Top gainer”) and navigates to the asset detail page on click.  
+    - Filter by Category (multi-select) and by Performance (Gainers/Losers, multi-select) or Sort by price (low→high / high→low) or by % change (top gainers).  
+  - A card layout shows key data per asset (price, daily performance, 52-week range, tags like “Top gainer”) and navigates to the asset detail page on click.  
   - Empty states:
-    - If there are **no assets at all**, filters are hidden and a simple “No assets available right now” message is shown.
+    - If there are no assets at all, filters are hidden and a simple “No assets available right now” message is shown.
     - If filters hide everything, the page explains “No assets match your filters” and offers a Clear filters button.
 
 - **Asset Detail / Secondary Trading Page (`app/investing/secondary-trading/[id]/page.tsx`)**  
-  - Fetches the chosen asset from `secondaryTradingAssets.json` and shows:
-    - **About / Company details**.
-    - **Price History** mini-chart with a “Chart range” summary, date range inputs (timeline filter), and legend for OHLC series.
-    - **Order Book** with best bid/ask, spread, and a sorted depth view (by “Best prices”, “Price ↑”, or “Largest first”).
-    - A **Place Order** panel (buy/sell) integrated with `lib/matchingEngine.ts` and the SQLite DB (`tzero.db`).
-    - **Your Orders & Positions** for the current user:
-      - Position table (shares, avg cost, est. value, P&L).
-      - Combined orders table (both buy and sell) with:
-        - Side, Qty, Price, Status, Date, and Cancel action.
-        - Multi-select filters for Side and Status.
-        - Pagination.
-  - Layout uses a **left 8 / right 4** column split:
-    - Row 1: About (left) / Place Order (right).
-    - Row 2: Price History (left) / Order Book (right).
-    - Row 3: full-width “Your Orders & Positions”.
-  - Order matching is handled by **`matchOrder`** from `lib/matchingEngine.ts`, which:
-    - Inserts the new order into `trading_orders`.
-    - Finds opposing orders that cross the price constraints.
-    - Creates trades in `trading_trades`, updates remaining quantities/status.
-    - Adjusts holdings and trading balances using `upsertHolding` and direct `UPDATE`s.
+  - Fetches the asset details and shows:
+    - About and Company details.
+    - Price History chart with a “Chart range” summary, date range inputs (timeline filter), and legend for OHLC series.
+    - Order Book with best bid/ask, spread, and a sorted depth view (by “Best prices”, “Price ↑”, or “Largest first”).
+    - A Place Order panel (buy/sell) integrated with backend logic.
+    - Your Orders & Positions for the current user: Position table (shares, avg cost, est. value, P&L) and Combined orders table (both buy and sell) with columns Side, Qty, Price, Status, Date, and Cancel action and Multi-select filters for Side and Status along with Pagination.
+  - Order matching is handled by matchingEngine by inserting the new order into `trading_orders` and finds opposing orders that cross the price constraints and creates trades in `trading_trades`, updates remaining quantities/status and adjusts holdings and trading balances using `upsertHolding` and direct `UPDATE`s.
 
-- **Portfolio Page (`app/account/portfolio/page.tsx` + `components/portfolio`)**  
-  - **PortfolioSummaryCard**: shows total portfolio value, allocation bar (primary invested, trading positions, trading cash, bank cash) with percentages, and quick stats cards.  
-  - **InvestmentsSection**:
-    - **Holdings** section:
-      - Collapsible card listing trading holdings with:
-        - Search by symbol/title.
-        - Sort modes (value, P/L, symbol).
-        - Per-holding detail: shares, avg cost, current value, P/L, and link to asset detail page.
-      - Filters are hidden when there are no holdings, leaving just a clean “No holdings” message.
-    - **Orders** section:
-      - Collapsible card showing all trading orders across assets for the user.
-      - Multi-select filters for Side and Status, search by symbol, and Clear filters.
-      - Table with Symbol, Side, Qty, Price, Status, Date; pagination for long lists.
-      - The entire section is hidden when there are no orders at all.
-  - **Empty state for portfolio**:
-    - When there are no holdings or orders, the “MY POSITIONS” area shows an illustration and “Let’s find your first investment!” with an **Explore Opportunities** button linking to the secondary marketplace.
-
-- **Database Layer (`lib/db.ts`, `data/tzero.db`)**  
-  - Uses `better-sqlite3` with an initialized schema for:
-    - `users`, `onboarding_data`, `pending_signups`.
-    - `payment_methods`, `payments`.
-    - `investments` (primary).
-    - `trading_orders`, `trading_trades`, `trading_holdings`, `trading_balances`.
-  - All tables are created on startup if missing, and foreign keys are enabled.  
-  - The DB file lives at `data/tzero.db`; deleting it fully resets users, holdings, orders, trades, balances, etc. and the schema is recreated on next run.
-
+- **Portfolio Page**  
+  - PortfolioSummaryCard in account portfolio page shows total portfolio value, allocation bar (primary invested, trading positions, trading cash, bank cash) with percentages, and quick stats cards.  
+  - InvestmentsSection shows:
+    - Holdings section: Collapsible card listing trading holdings with search by symbol/title and sort modes (value, P/L, symbol) and per-holding detail (shares, avg cost, current value, P/L, and link to asset detail page) and filters are hidden when there are no holdings, leaving just a clean “No holdings” message.
+    - Orders section: Collapsible card showing all trading orders across assets for the user and multi-select filters for Side and Status, search by symbol, and Clear filters and a table with Symbol, Side, Qty, Price, Status, Date along with pagination for long lists. The entire section is hidden when there are no orders at all.
+  - Empty state for portfolio: When there are no holdings or orders, the “MY POSITIONS” area shows an illustration and “Let’s find your first investment!” with an **Explore Opportunities** button linking to the secondary marketplace.
 
 ## Key technical decisions and trade-offs
 
