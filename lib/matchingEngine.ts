@@ -127,6 +127,15 @@ export function matchOrder(
       upsertHolding(buyerId, symbol, fillQty, tradePrice)
       upsertHolding(sellerId, symbol, -fillQty, tradePrice)
 
+      // Cash: buyer was charged full order at place time; refund filled amount. Seller receives.
+      const amount = fillQty * tradePrice
+      db.prepare(
+        `UPDATE trading_balances SET cash_balance = cash_balance + ?, updated_at = datetime('now') WHERE user_id = ?`
+      ).run(amount, buyerId)
+      db.prepare(
+        `UPDATE trading_balances SET cash_balance = cash_balance + ?, updated_at = datetime('now') WHERE user_id = ?`
+      ).run(amount, sellerId)
+
       remaining -= fillQty
     }
 

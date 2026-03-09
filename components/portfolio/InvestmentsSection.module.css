@@ -1,5 +1,5 @@
 .investmentsSection {
-  margin-bottom: 48px;
+  margin-bottom: 0;
 }
 
 .sectionTitle {
@@ -7,7 +7,7 @@
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 1px;
-  margin-bottom: 32px;
+  margin-bottom: 0;
   text-transform: uppercase;
   display: block;
 }
@@ -23,6 +23,10 @@
   padding: 24px;
   margin-bottom: 24px;
   transition: all 0.3s ease;
+}
+
+.collapsibleSection:first-of-type {
+  margin-top: 40px;
 }
 
 .collapsibleSection:hover {
@@ -44,6 +48,41 @@
   font-size: 18px;
   letter-spacing: 0.5px;
   margin: 0;
+}
+
+.sectionContent {
+  margin-top: 8px;
+}
+
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.holdingCard {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.holdingCard:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.ordersTableWrap {
+  overflow-x: auto;
 }
 
 .tableContainer {
@@ -134,7 +173,15 @@
 
 @media (max-width: 768px) {
   .investmentsSection {
-    margin-bottom: 32px;
+    margin-bottom: 0;
+  }
+
+  .sectionTitle {
+    margin-bottom: 0;
+  }
+
+  .collapsibleSection:first-of-type {
+    margin-top: 32px;
   }
 
   .investmentsCard {
@@ -162,12 +209,16 @@
 
 @media (max-width: 600px) {
   .investmentsSection {
-    margin-bottom: 24px;
+    margin-bottom: 0;
   }
 
   .sectionTitle {
     font-size: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 0;
+  }
+
+  .collapsibleSection:first-of-type {
+    margin-top: 28px;
   }
 
   .categoryTitle {
@@ -208,5 +259,18 @@
   .tableContainer .MuiTableCell-root {
     padding: 12px 8px;
     font-size: 13px;
+  }
+
+  .filterBar {
+    gap: 8px;
+  }
+
+  .cardsGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .holdingCard {
+    padding: 12px;
   }
 }

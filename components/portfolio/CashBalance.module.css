@@ -7,7 +7,7 @@
 }
 
 .historySection {
-  margin-top: 16px;
+  margin-top: 0;
 }
 
 .historySection .sectionTitle {
@@ -15,7 +15,7 @@
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 1px;
-  margin-bottom: 24px;
+  margin-bottom: 40px;
   text-transform: uppercase;
 }
 
@@ -55,11 +55,11 @@
 
 .historyText .MuiListItemText-secondary {
   font-size: 14px;
-  color: #888888;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .historyArrow {
-  color: #888888;
+  color: rgba(255, 255, 255, 0.5);
   transition: all 0.2s ease-in-out;
 }
 
@@ -85,12 +85,12 @@
   }
 
   .historySection {
-    margin-top: 12px;
+    margin-top: 0;
   }
 
   .historySection .sectionTitle {
     font-size: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 32px;
   }
 
   .historyItem {
@@ -104,12 +104,12 @@
   }
 
   .historySection {
-    margin-top: 8px;
+    margin-top: 0;
   }
 
   .historySection .sectionTitle {
     font-size: 11px;
-    margin-bottom: 12px;
+    margin-bottom: 28px;
   }
 
   .historyList {
