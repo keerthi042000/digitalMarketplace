@@ -28,64 +28,13 @@ I implemented a small secondary-trading experience on top of the provided tZERO-
     - Orders section: Collapsible card showing all trading orders across assets for the user and multi-select filters for Side and Status, search by symbol, and Clear filters and a table with Symbol, Side, Qty, Price, Status, Date along with pagination for long lists. The entire section is hidden when there are no orders at all.
   - Empty state for portfolio: When there are no holdings or orders, the “MY POSITIONS” area shows an illustration and “Let’s find your first investment!” with an **Explore Opportunities** button linking to the secondary marketplace.
 
-## Key technical decisions and trade-offs
+## Technical decisions and trade-offs
 
-### 1. UI layout and component structure
-
-- **Decision**: Keep the original layout spirit but refine it instead of rewriting from scratch.  
-  - The asset detail page keeps `md=8/4` columns and uses `Paper` + `Grid` + `Box` to control vertical spacing and equal heights for paired sections.
-  - Section titles use a shared `sectionTitleSx` / `sectionTitleTextSx` styling pattern for a consistent, “catchy” look.
-- **Trade-off**:  
-  - This keeps the code relatively flat and easy to navigate in a single file, but some components (especially `[id]/page.tsx` and `InvestmentsSection.tsx`) are large. With more time, I’d extract subcomponents to reduce file size and make reuse easier.
-
-### 2. Filters and multi-select UX
-
-- **Decision**: Use **MUI `Select` with `multiple` + `Checkbox` + `ListItemText`** for:
-  - Orders Side/Status filters (both in portfolio and asset detail).
-  - Secondary marketplace Category and Performance filters.
-- **Trade-offs**:
-  - Pros: Very compact, discoverable UI; consistent with MUI patterns; easy to extend with more options later.
-  - Cons: Code is somewhat verbose (repeating the same pattern in a couple of places). I favored duplication and explicitness for clarity within this assignment over premature abstraction.
-
-### 3. Combined orders view (asset detail & portfolio)
-
-- **Decision**:
-  - Asset detail: present **a single orders table** per asset with filters, rather than separate Buy/Sell tables.
-  - Portfolio: present all trading orders for the user with similar filters and a single table.
-- **Trade-offs**:
-  - Improves scan-ability and reduces visual noise: one place to see orders, consistent columns.
-  - Requires careful date formatting and alignment to avoid crowded columns; I chose a relatively compact but readable layout and slightly increased font size.
-
-### 4. Date formatting consistency
-
-- **Decision**: Introduce a single helper `formatDateTime` in `lib/dateUtils.ts` and use it wherever an order or investment timestamp is shown.
-- **Trade-off**:
-  - Single point of change (good for future localization or stylistic changes) at the cost of one more small shared module.
-
-### 5. Performance optimizations (memoization & compute placement)
-
-- **Decision**: Add `useMemo` for:
-  - `filteredAssets` and `sortedAssets` in the marketplace.
-  - `filteredOrders` in the asset detail page.
-  - `secondaryTradingInvestments`, `sortedTradingOrders`, and the date formatting for portfolio tables.
-  - This prevents re-running filter/sort logic on every render when inputs haven’t changed.
-- **Trade-offs**:
-  - For small data sets (like this assignment), the performance gain is minor, but:
-    - It documents *where* heavy computation lives.
-    - It scales better if you later plug in real data or larger tables.
-
-### 6. Empty states and conditional rendering
-
-- **Decision**:
-  - Hide entire sections when there is no meaningful data:
-    - Orders section in portfolio is hidden when `tradingOrders.length === 0`.
-    - Holdings filters are hidden when there are no holdings.
-    - Marketplace filters are hidden when there are no assets (only a “No assets available” card is shown).
-  - Use different copy depending on whether filters are active or not.
-- **Trade-offs**:
-  - Slightly more conditionals in JSX, but a cleaner experience:
-    - Users aren’t presented with filters that can’t produce any result.
-    - The cause of “no results” is clearer (no assets vs. filters too strict).
+- **Layout**: I kept the original 8/4 two‑column layout and refined spacing and section headers, instead of rebuilding the pages from scratch.
+- **Filters and tables**: I used MUI multi‑selects with checkboxes for all filters (category, performance, side, status) and showed buy/sell orders together in a single table to make them easier to read.
+- **Data formatting**: I added a small `formatDateTime` helper so all dates (orders and investments) look the same across the app.
+- **Performance**: I wrapped the heavier filter/sort logic (assets, orders, holdings) in `useMemo`, and I only render sections/filters when there is data, to avoid unnecessary work and keep the UI clean.
+- **Empty states and conditional rendering**: I hided entire sections when there is no meaningful data for a cleaner experience to avoid presenting the users with filters that can’t produce any result.
 
 
 ## What I’d improve with more time
