@@ -45,13 +45,14 @@ import {
   Checkbox,
   ListItemText,
 } from '@mui/material'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTheme } from '@mui/material/styles'
 import { ArrowBack } from '@mui/icons-material'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatCurrency, getSecondaryTradingSymbol, slugify, getSeededColor } from '@/lib/investmentUtils'
 import secondaryTradingAssets from '@/data/secondaryTradingAssets.json'
 import api from '@/lib/api'
+import { formatDateTime } from '@/lib/dateUtils'
 
 
 export default function SecondaryTradingDetailPage() {
@@ -102,24 +103,23 @@ export default function SecondaryTradingDetailPage() {
   const symbol = getSecondaryTradingSymbol(asset.title, asset.symbol)
   const maxSellShares = assetHolding?.shares ?? 0
   const ORDERS_PAGE_SIZE = 5
-  const filteredOrders = assetOrders
-    .filter((o) => {
-      if (ordersSideFilter.length > 0 && !ordersSideFilter.includes(o.side.toLowerCase())) return false
-      if (ordersStatusFilter.length > 0 && !ordersStatusFilter.includes(o.status)) return false
-      return true
-    })
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  const ordersPaged = filteredOrders.slice((ordersPage - 1) * ORDERS_PAGE_SIZE, ordersPage * ORDERS_PAGE_SIZE)
+  const filteredOrders = useMemo(
+    () =>
+      assetOrders
+        .filter((o) => {
+          if (ordersSideFilter.length > 0 && !ordersSideFilter.includes(o.side.toLowerCase()))
+            return false
+          if (ordersStatusFilter.length > 0 && !ordersStatusFilter.includes(o.status)) return false
+          return true
+        })
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [assetOrders, ordersSideFilter, ordersStatusFilter],
+  )
+  const ordersPaged = filteredOrders.slice(
+    (ordersPage - 1) * ORDERS_PAGE_SIZE,
+    ordersPage * ORDERS_PAGE_SIZE,
+  )
   const ordersPages = Math.max(1, Math.ceil(filteredOrders.length / ORDERS_PAGE_SIZE))
-
-  const formatOrderDate = (dateString: string) => {
-    try {
-      const d = new Date(dateString)
-      return isNaN(d.getTime()) ? dateString : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-    } catch {
-      return dateString
-    }
-  }
 
   const quantityValid = Number.isInteger(quantity) && quantity >= 1
   const priceValid = typeof price === 'number' && price > 0 && Number.isFinite(price)
@@ -808,7 +808,7 @@ export default function SecondaryTradingDetailPage() {
                                   <TableCell sx={{ borderColor: 'rgba(255,255,255,0.08)' }}>
                                     <Chip label={o.status} size="small" sx={{ height: 20, fontSize: 10, bgcolor: o.status === 'Completed' ? 'rgba(0,255,136,0.15)' : 'rgba(255,255,255,0.08)', color: o.status === 'Completed' ? theme.palette.primary.main : 'rgba(255,255,255,0.7)' }} />
                                   </TableCell>
-                                  <TableCell sx={{ color: 'rgba(255,255,255,0.65)', fontSize: 12, py: 1.5, borderColor: 'rgba(255,255,255,0.08)', whiteSpace: 'nowrap' }}>{formatOrderDate(o.createdAt)}</TableCell>
+                                  <TableCell sx={{ color: 'rgba(255,255,255,0.65)', fontSize: 12, py: 1.5, borderColor: 'rgba(255,255,255,0.08)', whiteSpace: 'nowrap' }}>{formatDateTime(o.createdAt)}</TableCell>
                                   <TableCell align="right" sx={{ py: 1.5, borderColor: 'rgba(255,255,255,0.08)', width: '1%', whiteSpace: 'nowrap' }}>
                                     {['New', 'Pending', 'PartiallyFilled'].includes(o.status) && (
                                       <Button size="small" color="error" variant="outlined" onClick={() => openCancelConfirm(o.id)} disabled={cancellingId === o.id} sx={{ textTransform: 'none', fontSize: 10, minWidth: 0, px: 1, height: 20, minHeight: 20, py: 0 }}>

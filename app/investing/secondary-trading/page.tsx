@@ -11,7 +11,7 @@
  * Utils: import { formatCurrency, slugify } from '@/lib/investmentUtils'
  */
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 // import {
@@ -82,8 +82,11 @@ export default function SecondaryTradingPage() {
   const [sortBy, setSortBy] = useState<SortOption>('featured')
 
   const categories = Array.from(new Set(allAssets.map((a) => a.category).filter(Boolean))).sort()
-  const topPerformance = Math.max(...allAssets.map((a) => a.performancePercent))
+  const topPerformance = allAssets.length
+    ? Math.max(...allAssets.map((a) => a.performancePercent))
+    : 0
 
+  const hasAnyAssets = allAssets.length > 0
   const hasActiveFilters = search !== '' || categoryFilter.length > 0 || performanceFilter.length > 0
 
   const clearFilters = () => {
@@ -92,33 +95,41 @@ export default function SecondaryTradingPage() {
     setPerformanceFilter([])
   }
 
-  const filteredAssets = allAssets.filter((asset) => {
-    const matchesSearch =
-      asset.title.toLowerCase().includes(search.toLowerCase()) ||
-      getSecondaryTradingSymbol(asset.title, asset.symbol).toLowerCase().includes(search.toLowerCase())
-    const matchesCategory = categoryFilter.length === 0 || categoryFilter.includes(asset.category)
-    const matchesPerformance =
-      performanceFilter.length === 0 ||
-      (performanceFilter.includes('Gainers') && asset.isPositive) ||
-      (performanceFilter.includes('Losers') && !asset.isPositive)
-    return matchesSearch && matchesCategory && matchesPerformance
-  })
+  const filteredAssets = useMemo(
+    () =>
+      allAssets.filter((asset) => {
+        const matchesSearch =
+          asset.title.toLowerCase().includes(search.toLowerCase()) ||
+          getSecondaryTradingSymbol(asset.title, asset.symbol)
+            .toLowerCase()
+            .includes(search.toLowerCase())
+        const matchesCategory =
+          categoryFilter.length === 0 || categoryFilter.includes(asset.category)
+        const matchesPerformance =
+          performanceFilter.length === 0 ||
+          (performanceFilter.includes('Gainers') && asset.isPositive) ||
+          (performanceFilter.includes('Losers') && !asset.isPositive)
+        return matchesSearch && matchesCategory && matchesPerformance
+      }),
+    [allAssets, search, categoryFilter, performanceFilter],
+  )
 
-  const sortedAssets = [...filteredAssets].sort((a, b) => {
-    if (sortBy === 'priceAsc') {
-      return a.currentValue - b.currentValue
-    }
-    if (sortBy === 'priceDesc') {
-      return b.currentValue - a.currentValue
-    }
-    if (sortBy === 'changeDesc') {
-      return b.performancePercent - a.performancePercent
-    }
-    return 0
-  })
-
-
-  // ─── Replace this placeholder layout with your implementation ───
+  const sortedAssets = useMemo(
+    () =>
+      [...filteredAssets].sort((a, b) => {
+        if (sortBy === 'priceAsc') {
+          return a.currentValue - b.currentValue
+        }
+        if (sortBy === 'priceDesc') {
+          return b.currentValue - a.currentValue
+        }
+        if (sortBy === 'changeDesc') {
+          return b.performancePercent - a.performancePercent
+        }
+        return 0
+      }),
+    [filteredAssets, sortBy],
+  )
 
   return (
     <Box sx={{ minHeight: '100vh' }}>
@@ -158,145 +169,196 @@ export default function SecondaryTradingPage() {
           </Typography>
         </Box>
 
-        <Paper
-          sx={{
-            p: 2,
-            mb: 3,
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 2,
-            bgcolor: 'rgba(255,255,255,0.02)',
-          }}
-        >
-          <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                placeholder="Search by name or description"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                size="small"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: 'rgba(255,255,255,0.5)' }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    color: '#fff',
-                    bgcolor: 'rgba(255,255,255,0.04)',
-                    borderRadius: 1.5,
-                    '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                  },
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={6} md={3}>
-              <FormControl fullWidth size="small" sx={{ minWidth: 100 }}>
-                <InputLabel sx={{ color: 'rgba(255,255,255,0.6)' }}>Category</InputLabel>
-                <Select
-                  multiple
-                  value={categoryFilter}
-                  label="Category"
-                  onChange={(e) => setCategoryFilter(typeof e.target.value === 'string' ? [] : e.target.value)}
-                  renderValue={(selected) => (selected.length === 0 ? 'All' : selected.map((c) => c.charAt(0).toUpperCase() + c.slice(1)).join(', '))}
-                  sx={{
-                    color: '#fff',
-                    bgcolor: 'rgba(255,255,255,0.04)',
-                    borderRadius: 1.5,
-                    '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                    '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' },
-                  }}
-                >
-                  {categories.map((cat) => (
-                    <MenuItem key={cat} value={cat}>
-                      <Checkbox checked={categoryFilter.includes(cat)} size="small" sx={{ color: 'rgba(255,255,255,0.7)' }} />
-                      <ListItemText primary={cat.charAt(0).toUpperCase() + cat.slice(1)} />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={6} md={3}>
-              <FormControl fullWidth size="small" sx={{ minWidth: 100 }}>
-                <InputLabel sx={{ color: 'rgba(255,255,255,0.6)' }}>Performance</InputLabel>
-                <Select
-                  multiple
-                  value={performanceFilter}
-                  label="Performance"
-                  onChange={(e) => setPerformanceFilter(typeof e.target.value === 'string' ? [] : e.target.value)}
-                  renderValue={(selected) => (selected.length === 0 ? 'All' : selected.join(', '))}
-                  sx={{
-                    color: '#fff',
-                    bgcolor: 'rgba(255,255,255,0.04)',
-                    borderRadius: 1.5,
-                    '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                    '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' },
-                  }}
-                >
-                  <MenuItem value="Gainers">
-                    <Checkbox checked={performanceFilter.includes('Gainers')} size="small" sx={{ color: 'rgba(255,255,255,0.7)' }} />
-                    <ListItemText primary="Gainers" />
-                  </MenuItem>
-                  <MenuItem value="Losers">
-                    <Checkbox checked={performanceFilter.includes('Losers')} size="small" sx={{ color: 'rgba(255,255,255,0.7)' }} />
-                    <ListItemText primary="Losers" />
-                  </MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={6} md={3}>
-              <TextField
-                select
-                fullWidth
-                size="small"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                label="Sort by"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    color: '#fff',
-                    bgcolor: 'rgba(255,255,255,0.04)',
-                    borderRadius: 1.5,
-                    '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                  },
-                  '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.6)' },
-                  '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' },
-                }}
+        {hasAnyAssets ? (
+          <>
+            <Paper
+              sx={{
+                p: 2,
+                mb: 3,
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 2,
+                bgcolor: 'rgba(255,255,255,0.02)',
+              }}
+            >
+              <Grid
+                container
+                spacing={2}
+                alignItems="center"
+                sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}
               >
-                <MenuItem value="featured">Featured</MenuItem>
-                <MenuItem value="priceAsc">Price · Low to high</MenuItem>
-                <MenuItem value="priceDesc">Price · High to low</MenuItem>
-                <MenuItem value="changeDesc">Performance · Top gainers</MenuItem>
-              </TextField>
-            </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    placeholder="Search by name or description"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    size="small"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon sx={{ color: 'rgba(255,255,255,0.5)' }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        color: '#fff',
+                        bgcolor: 'rgba(255,255,255,0.04)',
+                        borderRadius: 1.5,
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+                        '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                      },
+                    }}
+                  />
+                </Grid>
 
+                <Grid item xs={6} md={3}>
+                  <FormControl fullWidth size="small" sx={{ minWidth: 100 }}>
+                    <InputLabel sx={{ color: 'rgba(255,255,255,0.6)' }}>Category</InputLabel>
+                    <Select
+                      multiple
+                      value={categoryFilter}
+                      label="Category"
+                      onChange={(e) =>
+                        setCategoryFilter(typeof e.target.value === 'string' ? [] : e.target.value)
+                      }
+                      renderValue={(selected) =>
+                        selected.length === 0
+                          ? 'All'
+                          : selected
+                              .map((c) => c.charAt(0).toUpperCase() + c.slice(1))
+                              .join(', ')
+                      }
+                      sx={{
+                        color: '#fff',
+                        bgcolor: 'rgba(255,255,255,0.04)',
+                        borderRadius: 1.5,
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+                        '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                        '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' },
+                      }}
+                    >
+                      {categories.map((cat) => (
+                        <MenuItem key={cat} value={cat}>
+                          <Checkbox
+                            checked={categoryFilter.includes(cat)}
+                            size="small"
+                            sx={{ color: 'rgba(255,255,255,0.7)' }}
+                          />
+                          <ListItemText
+                            primary={cat.charAt(0).toUpperCase() + cat.slice(1)}
+                          />
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
 
-          </Grid>
-        </Paper>
+                <Grid item xs={6} md={3}>
+                  <FormControl fullWidth size="small" sx={{ minWidth: 100 }}>
+                    <InputLabel sx={{ color: 'rgba(255,255,255,0.6)' }}>Performance</InputLabel>
+                    <Select
+                      multiple
+                      value={performanceFilter}
+                      label="Performance"
+                      onChange={(e) =>
+                        setPerformanceFilter(
+                          typeof e.target.value === 'string' ? [] : e.target.value,
+                        )
+                      }
+                      renderValue={(selected) =>
+                        selected.length === 0 ? 'All' : selected.join(', ')
+                      }
+                      sx={{
+                        color: '#fff',
+                        bgcolor: 'rgba(255,255,255,0.04)',
+                        borderRadius: 1.5,
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+                        '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                        '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' },
+                      }}
+                    >
+                      <MenuItem value="Gainers">
+                        <Checkbox
+                          checked={performanceFilter.includes('Gainers')}
+                          size="small"
+                          sx={{ color: 'rgba(255,255,255,0.7)' }}
+                        />
+                        <ListItemText primary="Gainers" />
+                      </MenuItem>
+                      <MenuItem value="Losers">
+                        <Checkbox
+                          checked={performanceFilter.includes('Losers')}
+                          size="small"
+                          sx={{ color: 'rgba(255,255,255,0.7)' }}
+                        />
+                        <ListItemText primary="Losers" />
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
 
+                <Grid item xs={6} md={3}>
+                  <TextField
+                    select
+                    fullWidth
+                    size="small"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    label="Sort by"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        color: '#fff',
+                        bgcolor: 'rgba(255,255,255,0.04)',
+                        borderRadius: 1.5,
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+                        '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                      },
+                      '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.6)' },
+                      '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' },
+                    }}
+                  >
+                    <MenuItem value="featured">Featured</MenuItem>
+                    <MenuItem value="priceAsc">Price · Low to high</MenuItem>
+                    <MenuItem value="priceDesc">Price · High to low</MenuItem>
+                    <MenuItem value="changeDesc">Performance · Top gainers</MenuItem>
+                  </TextField>
+                </Grid>
+              </Grid>
+            </Paper>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.45)' }}>
-            {filteredAssets.length} asset{filteredAssets.length !== 1 ? 's' : ''} available
-            {hasActiveFilters ? ' matching filters' : ''}
-          </Typography>
-          {hasActiveFilters && (
-            <Button size="small" onClick={clearFilters} sx={{ textTransform: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>
-              Clear filters
-            </Button>
-          )}
-        </Box>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                mb: 2,
+                flexWrap: 'wrap',
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{ color: 'rgba(255,255,255,0.45)' }}
+              >
+                {filteredAssets.length} asset{filteredAssets.length !== 1 ? 's' : ''} available
+                {hasActiveFilters ? ' matching filters' : ''}
+              </Typography>
+              {hasActiveFilters && (
+                <Button
+                  size="small"
+                  onClick={clearFilters}
+                  sx={{
+                    textTransform: 'none',
+                    color: 'rgba(255,255,255,0.6)',
+                    fontSize: 12,
+                  }}
+                >
+                  Clear filters
+                </Button>
+              )}
+            </Box>
 
-        <Grid container spacing={2}>
+            <Grid container spacing={2}>
           {sortedAssets.map((asset) => {
             const symbol = getSecondaryTradingSymbol(asset.title, asset.symbol)
             const categoryLabel = asset.category ? asset.category.charAt(0).toUpperCase() + asset.category.slice(1) : ''
@@ -489,34 +551,55 @@ export default function SecondaryTradingPage() {
               bgcolor: 'rgba(255,255,255,0.02)',
             }}
           >
-            <Typography sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>No assets match your filters.</Typography>
-            <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, mb: 2 }}>
-              Try a different search or category.
+            <Typography sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
+              {hasActiveFilters ? 'No assets match your filters.' : 'No assets available.'}
             </Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={clearFilters}
-              sx={{ textTransform: 'none', borderColor: 'rgba(255,255,255,0.3)', color: 'rgba(255,255,255,0.9)', '&:hover': { borderColor: 'rgba(255,255,255,0.5)' } }}
-            >
-              Clear filters
-            </Button>
+            <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, mb: 2 }}>
+              {hasActiveFilters
+                ? 'Try a different search or category.'
+                : 'Please check back later for new listings.'}
+            </Typography>
+            {hasActiveFilters && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={clearFilters}
+                sx={{
+                  textTransform: 'none',
+                  borderColor: 'rgba(255,255,255,0.3)',
+                  color: 'rgba(255,255,255,0.9)',
+                  '&:hover': { borderColor: 'rgba(255,255,255,0.5)' },
+                }}
+              >
+                Clear filters
+              </Button>
+            )}
           </Paper>
         )}
 
 
-        {/* Remove this notice once you start building */}
-        {/* <Paper sx={{
-          mt: 4, p: 2.5,
-          border: '1px dashed rgba(114, 110, 92, 0.25)',
-          borderRadius: 2,
-          backgroundColor: 'rgba(255, 200, 0, 0.02)',
-        }}>
-          <Typography sx={{ color: '#998a00', fontSize: '13px', lineHeight: 1.7 }}>
-            The layout above is a generic wireframe to help you get started.
-            Remove it and build your own — this is your playground, feel free to explore.
-          </Typography>
-        </Paper> */}
+        {/* end content when assets exist */}
+          </>
+        ) : (
+          <Paper
+            elevation={0}
+            sx={{
+              mt: 3,
+              p: 4,
+              textAlign: 'center',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 2,
+              bgcolor: 'rgba(255,255,255,0.02)',
+            }}
+          >
+            <Typography sx={{ color: 'rgba(255,255,255,0.8)', mb: 1.5, fontSize: 16, fontWeight: 600 }}>
+              No assets available right now
+            </Typography>
+            <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>
+              There are currently no secondary trading assets listed. Please check back soon.
+            </Typography>
+          </Paper>
+        )}
       </Container>
     </Box>
   )

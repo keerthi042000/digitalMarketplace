@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, IconButton, Pagination, TextField, InputAdornment, FormControl, InputLabel, Select, MenuItem, Checkbox, ListItemText } from '@mui/material'
+import { formatDateTime } from '@/lib/dateUtils'
 import { ExpandMore, ExpandLess, Search, TrendingUp, TrendingDown, OpenInNew } from '@mui/icons-material'
 import { useTheme } from '@mui/material/styles'
 import InvestmentLookupIllustration from './InvestmentLookupIllustration'
@@ -76,21 +77,10 @@ export default function InvestmentsSection({
 
 
   // Group investments by asset type (marketplace / secondary trading only)
-  const secondaryTradingInvestments = investments.filter(
-    (inv) => inv.asset_type === 'SECONDARY_TRADING'
+  const secondaryTradingInvestments = useMemo(
+    () => investments.filter((inv) => inv.asset_type === 'SECONDARY_TRADING'),
+    [investments],
   )
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    if (isNaN(date.getTime())) return dateString
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -204,7 +194,7 @@ export default function InvestmentsSection({
         <Typography variant="h6" className={styles.sectionTitle}>
           MY POSITIONS
         </Typography>
-        <Paper className={styles.investmentsCard}>
+        <Paper className={styles.investmentsCard} sx={{ mt: 2.5 }}>
           <Typography variant="body2" sx={{ color: '#888888', textAlign: 'center', py: 4 }}>
             Loading investments...
           </Typography>
@@ -219,7 +209,7 @@ export default function InvestmentsSection({
         <Typography variant="h6" className={styles.sectionTitle}>
           MY POSITIONS
         </Typography>
-        <Paper className={styles.investmentsCard}>
+        <Paper className={styles.investmentsCard} sx={{ mt: 2.5 }}>
           <Box className={styles.illustrationContainer}>
             <InvestmentLookupIllustration />
           </Box>
@@ -260,60 +250,65 @@ export default function InvestmentsSection({
         </Box>
         {holdingsExpanded && (
           <Box className={styles.sectionContent}>
-            <Box className={styles.filterBar}>
-              <TextField
-                size="small"
-                placeholder="Search by symbol"
-                value={holdingsSearch}
-                onChange={(e) => setHoldingsSearch(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 20 }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  minWidth: 220,
-                  '& .MuiOutlinedInput-root': {
-                    color: '#fff',
-                    borderRadius: 2,
-                    bgcolor: 'rgba(255,255,255,0.06)',
-                    '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                  },
-                }}
-              />
-              <FormControl size="small" sx={{ minWidth: 140 }}>
-                <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>Sort by</InputLabel>
-                <Select
-                  value={holdingsSort}
-                  label="Sort by"
-                  onChange={(e) => setHoldingsSort(e.target.value as typeof holdingsSort)}
-                  sx={{
-                    color: '#fff',
-                    borderRadius: 2,
-                    bgcolor: 'rgba(255,255,255,0.06)',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.12)' },
-                  }}
-                >
-                  <MenuItem value="valueDesc">Value (high → low)</MenuItem>
-                  <MenuItem value="valueAsc">Value (low → high)</MenuItem>
-                  <MenuItem value="pnlDesc">P/L (gain → loss)</MenuItem>
-                  <MenuItem value="pnlAsc">P/L (loss → gain)</MenuItem>
-                  <MenuItem value="symbol">Symbol A–Z</MenuItem>
-                </Select>
-              </FormControl>
-              {(holdingsSearch || holdingsSort !== 'valueDesc') && (
-                <Button
+            {hasHoldings && (
+              <Box className={styles.filterBar}>
+                <TextField
                   size="small"
-                  onClick={() => { setHoldingsSearch(''); setHoldingsSort('valueDesc') }}
-                  sx={{ textTransform: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 12 }}
-                >
-                  Clear filters
-                </Button>
-              )}
-            </Box>
+                  placeholder="Search by symbol"
+                  value={holdingsSearch}
+                  onChange={(e) => setHoldingsSearch(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    minWidth: 220,
+                    '& .MuiOutlinedInput-root': {
+                      color: '#fff',
+                      borderRadius: 2,
+                      bgcolor: 'rgba(255,255,255,0.06)',
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                    },
+                  }}
+                />
+                <FormControl size="small" sx={{ minWidth: 140 }}>
+                  <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>Sort by</InputLabel>
+                  <Select
+                    value={holdingsSort}
+                    label="Sort by"
+                    onChange={(e) => setHoldingsSort(e.target.value as typeof holdingsSort)}
+                    sx={{
+                      color: '#fff',
+                      borderRadius: 2,
+                      bgcolor: 'rgba(255,255,255,0.06)',
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.12)' },
+                    }}
+                  >
+                    <MenuItem value="valueDesc">Value (high → low)</MenuItem>
+                    <MenuItem value="valueAsc">Value (low → high)</MenuItem>
+                    <MenuItem value="pnlDesc">P/L (gain → loss)</MenuItem>
+                    <MenuItem value="pnlAsc">P/L (loss → gain)</MenuItem>
+                    <MenuItem value="symbol">Symbol A–Z</MenuItem>
+                  </Select>
+                </FormControl>
+                {(holdingsSearch || holdingsSort !== 'valueDesc') && (
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setHoldingsSearch('')
+                      setHoldingsSort('valueDesc')
+                    }}
+                    sx={{ textTransform: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 12 }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </Box>
+            )}
             {/* <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mb: 2, fontSize: 12 }}>
               {filteredHoldings.length} position{filteredHoldings.length !== 1 ? 's' : ''}
               {holdingsSearch ? ' matching search' : ''} · page {holdingsPage} of {holdingsPages}
@@ -399,21 +394,22 @@ export default function InvestmentsSection({
       </Paper>
 
       {/* Section 2: Orders */}
-      <Paper ref={ordersSectionRef} className={styles.collapsibleSection}>
-        <Box
-          className={styles.sectionHeader}
-          onClick={() => setOrdersExpanded((prev) => !prev)}
-          sx={{ cursor: 'pointer' }}
-        >
-          <Typography variant="h6" className={styles.categoryTitle} sx={{ fontSize: 20 }}>
-            Orders {hasOrders ? `(${tradingOrders.length})` : ''}
-          </Typography>
-          <IconButton size="small" sx={{ color: '#ffffff' }}>
-            {ordersExpanded ? <ExpandLess /> : <ExpandMore />}
-          </IconButton>
-        </Box>
-        {ordersExpanded && (
-          <Box className={styles.sectionContent}>
+      {hasOrders && (
+        <Paper ref={ordersSectionRef} className={styles.collapsibleSection}>
+          <Box
+            className={styles.sectionHeader}
+            onClick={() => setOrdersExpanded((prev) => !prev)}
+            sx={{ cursor: 'pointer' }}
+          >
+            <Typography variant="h6" className={styles.categoryTitle} sx={{ fontSize: 20 }}>
+              Orders ({tradingOrders.length})
+            </Typography>
+            <IconButton size="small" sx={{ color: '#ffffff' }}>
+              {ordersExpanded ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
+          </Box>
+          {ordersExpanded && (
+            <Box className={styles.sectionContent}>
             <Box className={styles.filterBar}>
               <TextField
                 size="small"
@@ -544,7 +540,7 @@ export default function InvestmentsSection({
                           <TableCell sx={{ py: 1.5, border: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                             <Chip label={o.status} size="small" sx={{ bgcolor: o.status === 'Completed' ? 'rgba(0,255,136,0.18)' : 'rgba(255,255,255,0.08)', color: o.status === 'Completed' ? theme.palette.primary.main : 'rgba(255,255,255,0.7)', fontSize: 12, height: 24 }} />
                           </TableCell>
-                          <TableCell sx={{ color: 'rgba(255,255,255,0.7)', py: 1.5, fontSize: 15, border: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)', whiteSpace: 'nowrap' }}>{formatDate(o.createdAt)}</TableCell>
+                          <TableCell sx={{ color: 'rgba(255,255,255,0.7)', py: 1.5, fontSize: 15, border: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)', whiteSpace: 'nowrap' }}>{formatDateTime(o.createdAt)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -565,8 +561,9 @@ export default function InvestmentsSection({
               </Box>
             )}
           </Box>
-        )}
-      </Paper>
+          )}
+        </Paper>
+      )}
 
       {/* Section 3: Primary (optional) */}
       {hasPrimary && (
@@ -704,7 +701,7 @@ export default function InvestmentsSection({
                                       fontSize: 13,
                                     }}
                                   >
-                                    {formatDate(investment.created_at)}
+                                    {formatDateTime(investment.created_at)}
                                   </TableCell>
                                   <TableCell
                                     sx={{
