@@ -44,6 +44,7 @@ I implemented a small secondary-trading experience on top of the provided tZERO-
 - Add debouncing for text search: Prevent re-filtering on every key stroke by using a small debounce window (e.g. 200–300 ms).
 - Use row virtualization for large lists: If this were deployed with hundreds or thousands of orders/holdings, plugging in `react-window` or `react-virtualized` would keep scrolling smooth.
 - Introduce shared TypeScript types/enums for: Order sides, Order statuses, Payment statuses, asset categories, etc to reduce magic strings and make it easier to refactor statuses or add new ones.
+ - Add automatic logout after inactivity: Implement an idle-timeout mechanism that signs users out after a period of inactivity instead of keeping accounts logged in indefinitely, to improve security.
 
 
 ## Conclusion

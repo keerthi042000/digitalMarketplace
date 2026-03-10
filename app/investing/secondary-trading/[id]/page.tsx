@@ -423,9 +423,9 @@ export default function SecondaryTradingDetailPage() {
                 } as const
                 const titleCommon = { color: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: 0.4, mb: 1 }
                 const timeRangeFilterBox = (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.5, width: 'auto' }}>
-                    <TextField size="small" type="date" label="From" value={chartDateFrom} onChange={(e) => setChartDateFrom(e.target.value)} inputProps={{ min: minDate, max: chartDateTo || maxDate }} sx={{ ...dateInputSx, width: 140, minWidth: 140, '& .MuiInputBase-root': { fontSize: 13 } }} InputLabelProps={{ shrink: true }} />
-                    <TextField size="small" type="date" label="To" value={chartDateTo} onChange={(e) => setChartDateTo(e.target.value)} inputProps={{ min: chartDateFrom || minDate, max: maxDate }} sx={{ ...dateInputSx, width: 140, minWidth: 140, '& .MuiInputBase-root': { fontSize: 13 } }} InputLabelProps={{ shrink: true }} />
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.5, width: '100%', minWidth: 0 }}>
+                    <TextField size="small" type="date" label="From" value={chartDateFrom} onChange={(e) => setChartDateFrom(e.target.value)} inputProps={{ min: minDate, max: chartDateTo || maxDate }} sx={{ ...dateInputSx, width: { xs: '100%', sm: 140 }, minWidth: { xs: 0, sm: 140 }, flex: { xs: '1 1 100%', sm: 'none' }, '& .MuiInputBase-root': { fontSize: 13 } }} InputLabelProps={{ shrink: true }} />
+                    <TextField size="small" type="date" label="To" value={chartDateTo} onChange={(e) => setChartDateTo(e.target.value)} inputProps={{ min: chartDateFrom || minDate, max: maxDate }} sx={{ ...dateInputSx, width: { xs: '100%', sm: 140 }, minWidth: { xs: 0, sm: 140 }, flex: { xs: '1 1 100%', sm: 'none' }, '& .MuiInputBase-root': { fontSize: 13 } }} InputLabelProps={{ shrink: true }} />
                     {(chartDateFrom || chartDateTo) && (
                       <Button size="small" onClick={() => { setChartDateFrom(''); setChartDateTo('') }} sx={{ textTransform: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 12, py: 0.5 }}>Clear</Button>
                     )}
@@ -463,7 +463,7 @@ export default function SecondaryTradingDetailPage() {
                           </Box>
                         </Box>
                         <Box sx={{ ...chartRangeBoxCommon, flex: 1, minWidth: 0, justifyContent: 'center' }}>
-                          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 1.25, width: '100%' }}>
+                          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: '1fr 1fr 1fr 1fr' }, gap: 1.25, width: '100%' }}>
                             {(['close', 'open', 'high', 'low'] as const).map((key) => {
                               const active = chartHighlightLine === key
                               return (
@@ -533,7 +533,7 @@ export default function SecondaryTradingDetailPage() {
                 return (
                   <>
                     {priceHistoryHeaderRow}
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', gap: 2, mb: 2, width: '100%', minWidth: 0 }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'stretch', gap: 2, mb: 2, width: '100%', minWidth: 0 }}>
                       <Box sx={chartRangeBoxCommon}>
                         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, width: 'fit-content' }}>
                           <Box sx={{ textAlign: 'center' }}>
@@ -547,7 +547,7 @@ export default function SecondaryTradingDetailPage() {
                         </Box>
                       </Box>
                       <Box sx={{ ...chartRangeBoxCommon, flex: 1, minWidth: 0, justifyContent: 'center' }}>
-                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 1.25, width: '100%' }}>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: '1fr 1fr 1fr 1fr' }, gap: 1.25, width: '100%' }}>
                           {(['close', 'open', 'high', 'low'] as const).map((key) => {
                             const active = chartHighlightLine === key
                             return (
@@ -582,8 +582,8 @@ export default function SecondaryTradingDetailPage() {
                         </Box>
                       </Box>
                     </Box>
-                    <Box sx={{ width: '100%' }}>
-                      <Box sx={{ width: chartWidth, height: chartHeight, mt: 0.5, position: 'relative', flexShrink: 0 }}>
+                    <Box sx={{ width: '100%', minWidth: 0 }}>
+                      <Box sx={{ width: '100%', maxWidth: chartWidth, height: chartHeight, mt: 0.5, position: 'relative', flexShrink: 0 }}>
                         <svg width="100%" height={chartHeight} viewBox={`0 0 ${chartWidth} ${chartHeight}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'visible' }}>
                         {/* Y-axis line */}
                         <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + plotHeight} stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
@@ -780,8 +780,8 @@ export default function SecondaryTradingDetailPage() {
                         {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}
                         {(ordersSideFilter.length > 0 || ordersStatusFilter.length > 0) ? ' matching filters' : ''} · page {ordersPage} of {ordersPages}
                       </Typography>
-                      <TableContainer sx={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 1, overflow: 'hidden' }}>
-                        <Table size="small">
+                      <TableContainer sx={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 1, overflowX: 'auto' }}>
+                        <Table size="small" sx={{ minWidth: 400 }}>
                           <TableHead>
                             <TableRow sx={{ bgcolor: 'rgba(255,255,255,0.04)' }}>
                               <TableCell sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600, fontSize: 11, py: 1, borderColor: 'rgba(255,255,255,0.08)' }}>Side</TableCell>
