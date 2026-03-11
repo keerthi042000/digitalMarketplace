@@ -1,5 +1,9 @@
 ## Solution Overview
 
+## Demo video
+
+- Demo walkthrough: **https://drive.google.com/file/d/1Q6lxG1NlpIcIODlFc1zGRXM_o_D0Ye5y/view?usp=sharing**
+
 I implemented a small secondary-trading experience on top of the provided tZERO-style assignment codebase. It consists of:
 
 - **Secondary Marketplace (`app/investing/secondary-trading/page.tsx`)**  
