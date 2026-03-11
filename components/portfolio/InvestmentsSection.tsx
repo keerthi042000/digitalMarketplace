@@ -315,9 +315,24 @@ export default function InvestmentsSection({
             </Typography> */}
             <Box className={styles.cardsGrid}>
               {filteredHoldings.length === 0 ? (
-                <Box sx={{ gridColumn: '1 / -1', textAlign: 'center', py: 4, color: 'rgba(255,255,255,0.5)' }}>
-                  {holdingsSearch ? 'No holdings match your search.' : 'No holdings.'}
-                </Box>
+                holdingsSearch ? (
+                  <Box sx={{ gridColumn: '1 / -1', textAlign: 'center', py: 4, color: 'rgba(255,255,255,0.5)' }}>
+                    No holdings match your search.
+                  </Box>
+                ) : (
+                  <Box sx={{ gridColumn: '1 / -1', textAlign: 'center', py: 4 }}>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.5)', mb: 1.5 }}>
+                      No holdings yet.
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      className={styles.exploreButton}
+                      onClick={() => router.push('/investing/secondary-trading')}
+                    >
+                      Explore Opportunities
+                    </Button>
+                  </Box>
+                )
               ) : (
                 holdingsPaged.map((h) => {
                   const currentPrice = h.currentPrice ?? h.avgCost
